@@ -1,10 +1,12 @@
 package com.cjj.re.util
 
+import android.os.Looper
 import android.util.Log
 import androidx.sqlite.db.SimpleSQLiteQuery
 import com.cjj.re.ReManager
 import com.cjj.re.base.ReBaseDao
 import com.cjj.re.wrapper.Wrapper
+import kotlin.reflect.KClass
 
 /**
  *
@@ -15,27 +17,26 @@ import com.cjj.re.wrapper.Wrapper
  * @author CJJ
  * @since 2024-08-05 09:56
  */
-const val RE_TAG = "ReTag"
+internal const val RE_TAG = "ReTag"
 
 object ReUtil {
 
-    private val daoMap = HashMap<String, ReBaseDao<*>?>()
+    private val daoMap = HashMap<KClass<*>, ReBaseDao<*>?>()
 
     /** @noinspection unchecked
      * 获取Dao
      */
     @Suppress("UNCHECKED_CAST")
-    fun <T> getDao(className: String?): ReBaseDao<T>? {
-        if (className == null) return null
-        var reBaseDao = daoMap[className]
+    fun <T> getDao(entityClass: KClass<*>): ReBaseDao<T> {
+        val className = entityClass.simpleName ?: throw ClassNotFoundException("className为空")
+        var reBaseDao = daoMap[entityClass]
         if (reBaseDao == null) {
             reBaseDao =
                 ObjectReflectUtil.getInstance<ReBaseDao<T>>(String.format("com.cjj.re.dao.__Re%sDao", className))
-            daoMap[className] = reBaseDao
+            daoMap[entityClass] = reBaseDao
         }
-        return reBaseDao as ReBaseDao<T>
+        return reBaseDao as? ReBaseDao<T> ?: throw ClassNotFoundException("${className}找不到对应的Dao")
     }
-
 
     /**
      * 统计时间并打印日志
@@ -77,22 +78,28 @@ object ReUtil {
      */
     fun getSql(wrapper: Wrapper<*>): SimpleSQLiteQuery {
         val args = wrapper.getSqlBindArgs()
-        val sql = wrapper.build()
+        val sql = wrapper.build(false)
         if (ReManager.isLog) {
-            if (ReManager.isSqlFormat) {
-                if (args.isNotEmpty()) {
-                    val formatSql = sql.replace("?", "%s").format(*args.map { it.toString() }.toTypedArray())
+            if (args.isNotEmpty()) {
+                if (ReManager.isSqlFormat) {
+                    val formatSql = wrapper.build(true)
                     Log.i(RE_TAG, formatSql)
                 } else {
                     Log.i(RE_TAG, sql)
+                    Log.i(RE_TAG, "[${args.joinToString(",")}]")
                 }
             } else {
                 Log.i(RE_TAG, sql)
-                if (args.isNotEmpty()) {
-                    Log.i(RE_TAG, "[${args.joinToString(",")}]")
-                }
             }
         }
         return SimpleSQLiteQuery(sql, args.toTypedArray())
+    }
+
+    fun postMainThread(black: () -> Unit) {
+        if (Looper.getMainLooper().thread == Thread.currentThread()) {
+            black.invoke()
+        } else {
+            ReManager.mainHandler.post(black)
+        }
     }
 }

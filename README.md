@@ -32,8 +32,8 @@ plugins {
 ```groovy
 dependencies {
     //添加RoomExtension
-    implementation "io.github.sumuve:room-extension:1.0.0"
-    ksp "io.github.sumuve:room-extension-compiler:1.0.0"
+    implementation "io.github.sumuve:room-extension:1.1.1"
+    ksp "io.github.sumuve:room-extension-compiler:1.1.1"
     //添加Room
     implementation "androidx.room:room-runtime:2.6.1"
     ksp "androidx.room:room-compiler:2.6.1"
@@ -44,8 +44,8 @@ dependencies {
 ```kotlin
 dependencies {
     //添加RoomExtension
-    implementation("io.github.sumuve:room-extension:1.0.0")
-    ksp("io.github.sumuve:room-extension-compiler:1.0.0")
+    implementation("io.github.sumuve:room-extension:1.1.1")
+    ksp("io.github.sumuve:room-extension-compiler:1.1.1")
     //添加Room
     implementation("androidx.room:room-runtime:2.6.1")
     ksp("androidx.room:room-compiler:2.6.1")
@@ -213,6 +213,84 @@ val avg: Double = ReDao.aggregate<Student>().double().avg(Student::age)
 val sum: Float  = ReDao.aggregate<Student>().float().sum(Student::age)
 ```
 
+#### 拦截器
+
+```kotlin
+//全局拦截器 可设置多个 类型为Any即可
+ReManager.addInterceptor(object : ReInterceptor<Any> {
+        override fun insert(entity: Any): Any? {
+            //返回空的时候该元素将被拦截,不做处理
+            //统一修改更新时间
+            return super.insert(entity)
+        }
+        override fun update(entity: Any): Any? {
+            return super.update(entity)
+        }
+    
+        override fun delete(entity: Any): Any? {
+            return super.delete(entity)
+        }
+    
+        override fun refresh(entity: Any): Any? {
+            return super.refresh(entity)
+        }
+    
+    })
+
+//类型拦截器 可设置多个
+ReManager.addInterceptor(object : ReInterceptor<ClassType> {
+    override fun insert(entity: ClassType): ClassType? {
+        return super.insert(entity)
+    }
+
+    override fun update(entity: ClassType): ClassType? {
+        return super.update(entity)
+    }
+
+    override fun delete(entity: ClassType): ClassType? {
+        return super.delete(entity)
+    }
+
+    override fun refresh(entity: ClassType): ClassType? {
+        return super.refresh(entity)
+    }
+})
+```
+
+#### 观察者
+
+```kotlin
+//设置全局观察者
+ReManager.addObserver(object : ReObserver<Any> {
+    override fun insert(entity: Collection<Any>) {
+        super.insert(entity)
+    }
+    override fun update(entity: Collection<Any>) {
+        super.update(entity)
+    }
+    override fun delete(entity: Collection<Any>) {
+        super.delete(entity)
+    }
+    override fun refresh(entity: Any) {
+        super.refresh(entity)
+    }
+})
+//设置类型观察者
+ReManager.addObserver(object : ReObserver<ClassInfo> {
+    override fun insert(entity: Collection<ClassInfo>) {
+        super.insert(entity)
+    }
+    override fun update(entity: Collection<ClassInfo>) {
+        super.update(entity)
+    }
+    override fun delete(entity: Collection<ClassInfo>) {
+        super.delete(entity)
+    }
+    override fun refresh(entity: ClassInfo) {
+        super.refresh(entity)
+    }
+})
+```
 ---
 ### API
 ```kotlin

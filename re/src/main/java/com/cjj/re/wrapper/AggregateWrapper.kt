@@ -1,8 +1,8 @@
 package com.cjj.re.wrapper
 
-import androidx.sqlite.db.SimpleSQLiteQuery
 import com.cjj.re.condition.WhereConditionController
 import com.cjj.re.keys.AggregateFunctions
+import com.cjj.re.keys.SqlKeyword
 import com.cjj.re.util.TableUtils
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
@@ -30,25 +30,38 @@ class AggregateWrapper(private val function: AggregateFunctions, val column: KPr
         wrapper.condition(on)
     }
 
-    override fun build(): String {
+    override fun build(isFormat: Boolean): String {
 
-        val sb = StringBuilder()
-        if (function == AggregateFunctions.COUNT && column == null) {
-            sb.append("SELECT ${function.value}(*)")
-        } else {
-            sb.append("SELECT ${function.value}($tableName.$columnName)")
+        val sql = buildString {
+            if (function == AggregateFunctions.COUNT && column == null) {
+                append(SqlKeyword.SELECT)
+                append(" ")
+                append(function.value)
+                append("(*)")
+            } else {
+                append(SqlKeyword.SELECT)
+                append(" ")
+                append(function.value)
+                append("(")
+                append(tableName)
+                append(".")
+                append(columnName)
+                append(")")
+            }
+            append(" ")
+            append(SqlKeyword.FROM)
+            append(" ")
+            append(tableName)
+            if (joinList.isNotEmpty()) {
+                append(" ")
+                append(joinList.joinToString(" ") { it.build(isFormat) })
+                append(" ")
+            }
+            append(super.build(isFormat))
         }
 
-        sb.append(" FROM $tableName")
-        if (joinList.isNotEmpty()) {
-            sb.append(" ")
-            sb.append(joinList.joinToString(" ") { it.build() })
-            sb.append(" ")
-        }
-        sb.append(super.build())
-        return sb.toString()
+        return sql
     }
-
 
 
     override fun getSqlBindArgs(): List<Any> {

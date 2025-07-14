@@ -8,10 +8,10 @@ class DeleteWrapper(kClass: KClass<*>) :
 
     override val alias: Boolean = false
 
-    override fun build(): String {
+    override fun build(isFormat: Boolean): String {
         val sb = StringBuilder()
         sb.append("DELETE FROM $tableName")
-        sb.append(super.build())
+        sb.append(super.build(isFormat))
         return sb.toString()
     }
 

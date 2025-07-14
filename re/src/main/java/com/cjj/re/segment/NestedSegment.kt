@@ -30,7 +30,7 @@ open class NestedSegment(override val condition: String) : ConditionSegment {
 
     internal fun isNotEmpty() = conditionList.isNotEmpty()
 
-    override fun getSegment(): String {
-        return "(${ConditionSegment.getSegment(conditionList)})"
+    override fun getSegment(isFormat: Boolean): String {
+        return ConditionSegment.getSegment(conditionList, isFormat)
     }
 }

@@ -141,7 +141,7 @@ abstract class ConditionController<out T : ConditionController<T, F>, F : SqlFun
      */
     open fun notLikeLeft(property: KProperty<*>, value: String, function: F? = null): T {
         val columnBean = ColumnBean.byProperty(property)
-        likeLeft(columnBean.columnName, value, function, columnBean.tableName)
+        notLikeLeft(columnBean.columnName, value, function, columnBean.tableName)
         return thisT
     }
 
@@ -334,6 +334,16 @@ abstract class ConditionController<out T : ConditionController<T, F>, F : SqlFun
         return thisT
     }
 
+    open fun <V> between(
+        property: KProperty<*>,
+        range: OpenEndRange<V>,
+        function: F? = null
+    ): T where V : Number, V : Comparable<V> {
+        val columnBean = ColumnBean.byProperty(property)
+        between(columnBean.columnName, range.start, range.endExclusive, function, columnBean.tableName)
+        return thisT
+    }
+
     open fun between(
         column: String,
         start: Number,
@@ -355,6 +365,16 @@ abstract class ConditionController<out T : ConditionController<T, F>, F : SqlFun
     open fun notBetween(property: KProperty<*>, start: Number, end: Number, function: F? = null): T {
         val columnBean = ColumnBean.byProperty(property)
         notBetween(columnBean.columnName, start, end, function, columnBean.tableName)
+        return thisT
+    }
+
+    open fun <V> notBetween(
+        property: KProperty<*>,
+        range: OpenEndRange<V>,
+        function: F? = null
+    ): T where V : Number, V : Comparable<V> {
+        val columnBean = ColumnBean.byProperty(property)
+        between(columnBean.columnName, range.start, range.endExclusive, function, columnBean.tableName)
         return thisT
     }
 
@@ -406,27 +426,18 @@ abstract class ConditionController<out T : ConditionController<T, F>, F : SqlFun
         when (value) {
             null, is KProperty<*> -> {
             }
-
-            is QueryWrapper -> {
-                values.addAll(value.getSqlBindArgs())
-            }
-
-            is String, is Char, is Number, is Boolean, is ByteArray -> {
-                values.add(value)
-            }
-
-            is Array<*> -> {
-                value.forEach {
-                    addValue(it)
-                }
-            }
-
-            is Iterable<*> -> {
-                value.forEach {
-                    addValue(it)
-                }
-            }
-
+            is String, is Char, is Number, is Boolean -> values.add(value)
+            is QueryWrapper -> value.getSqlBindArgs().forEach { addValue(it) }
+            is Array<*> -> value.forEach { addValue(it) }
+            is Iterable<*> -> value.forEach { addValue(it) }
+            is ByteArray -> values.addAll(value.asList())
+            is CharArray -> values.addAll(value.asList())
+            is ShortArray -> values.addAll(value.asList())
+            is IntArray -> values.addAll(value.asList())
+            is LongArray -> values.addAll(value.asList())
+            is FloatArray -> values.addAll(value.asList())
+            is DoubleArray -> values.addAll(value.asList())
+            is BooleanArray -> values.addAll(value.asList())
             is Pair<*, *> -> {
                 addValue(value.first)
                 addValue(value.second)
@@ -440,7 +451,7 @@ abstract class ConditionController<out T : ConditionController<T, F>, F : SqlFun
 
     internal fun isNotEmpty() = nestedSegment.isNotEmpty()
 
-    override fun getSegment(): String {
-        return nestedSegment.getSegment()
+    override fun getSegment(isFormat: Boolean): String {
+        return nestedSegment.getSegment(isFormat)
     }
 }

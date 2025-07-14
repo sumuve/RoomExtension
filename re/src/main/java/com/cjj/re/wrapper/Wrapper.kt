@@ -1,12 +1,8 @@
 package com.cjj.re.wrapper
 
-import android.util.Log
-import androidx.sqlite.db.SimpleSQLiteQuery
-import com.cjj.re.ReManager
 import com.cjj.re.condition.WhereConditionController
-import com.cjj.re.util.RE_TAG
+import com.cjj.re.keys.SqlKeyword
 import com.cjj.re.util.TableUtils
-import kotlin.math.log
 import kotlin.reflect.KClass
 
 abstract class Wrapper<out T : Wrapper<T>>(
@@ -45,14 +41,14 @@ abstract class Wrapper<out T : Wrapper<T>>(
         }
     }
 
-    open fun build(): String {
+    open fun build(isFormat: Boolean): String {
         val sb = StringBuilder()
 
         if (controller.isNotEmpty()) {
             sb.append(" ")
-            sb.append("WHERE")
+            sb.append(SqlKeyword.WHERE)
             sb.append(" ")
-            sb.append(controller.getSegment())
+            sb.append(controller.getSegment(isFormat))
         }
 
         return sb.toString()

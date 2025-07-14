@@ -2,21 +2,22 @@ package com.cjj.re.aggregate
 
 import com.cjj.re.base.ReBaseCoreDao
 import com.cjj.re.keys.AggregateFunctions
+import com.cjj.re.keys.SqlKeyword
 import com.cjj.re.util.ReUtil
 import com.cjj.re.wrapper.AggregateWrapper
 import com.cjj.re.wrapper.GroupByAggregateWrapper
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 
-class ReAggregate<T>(private val dao: ReBaseCoreDao<T>, private val kClass: KClass<*>) {
+class ReAggregate<T>(private val dao: ReBaseCoreDao<T>, private val entityClass: KClass<*>) {
 
 
     fun aggregateInt(
         sqlFunction: AggregateFunctions,
         column: KProperty<*>? = null,
         wrapper: (AggregateWrapper.() -> Unit)? = null
-    ): Int = ReUtil.timeLog({ "query ${sqlFunction.value.lowercase()}" }) {
-        val aggregateWrapper = AggregateWrapper(sqlFunction, column, kClass)
+    ): Int = ReUtil.timeLog({ "${entityClass.simpleName} ${SqlKeyword.QUERY} ${sqlFunction.value.lowercase()}" }) {
+        val aggregateWrapper = AggregateWrapper(sqlFunction, column, entityClass)
         wrapper?.invoke(aggregateWrapper)
         val result = dao.getNumberByInt(ReUtil.getSql(aggregateWrapper))
         result
@@ -26,8 +27,8 @@ class ReAggregate<T>(private val dao: ReBaseCoreDao<T>, private val kClass: KCla
         sqlFunction: AggregateFunctions,
         column: KProperty<*>? = null,
         wrapper: (AggregateWrapper.() -> Unit)? = null
-    ): Long = ReUtil.timeLog({ "query ${sqlFunction.value.lowercase()}" }) {
-        val aggregateWrapper = AggregateWrapper(sqlFunction, column, kClass)
+    ): Long = ReUtil.timeLog({ "${entityClass.simpleName} ${SqlKeyword.QUERY} ${sqlFunction.value.lowercase()}" }) {
+        val aggregateWrapper = AggregateWrapper(sqlFunction, column, entityClass)
         wrapper?.invoke(aggregateWrapper)
         val result = dao.getNumberByLong(ReUtil.getSql(aggregateWrapper))
         result
@@ -37,8 +38,8 @@ class ReAggregate<T>(private val dao: ReBaseCoreDao<T>, private val kClass: KCla
         sqlFunction: AggregateFunctions,
         column: KProperty<*>,
         wrapper: (AggregateWrapper.() -> Unit)? = null
-    ): Float = ReUtil.timeLog({ "query ${sqlFunction.value.lowercase()}" }) {
-        val aggregateWrapper = AggregateWrapper(sqlFunction, column, kClass)
+    ): Float = ReUtil.timeLog({ "${entityClass.simpleName} ${SqlKeyword.QUERY} ${sqlFunction.value.lowercase()}" }) {
+        val aggregateWrapper = AggregateWrapper(sqlFunction, column, entityClass)
         wrapper?.invoke(aggregateWrapper)
         val result = dao.getNumberByFloat(ReUtil.getSql(aggregateWrapper))
         result
@@ -48,8 +49,8 @@ class ReAggregate<T>(private val dao: ReBaseCoreDao<T>, private val kClass: KCla
         sqlFunction: AggregateFunctions,
         column: KProperty<*>,
         wrapper: (AggregateWrapper.() -> Unit)? = null
-    ): Double = ReUtil.timeLog({ "query ${sqlFunction.value.lowercase()}" }) {
-        val aggregateWrapper = AggregateWrapper(sqlFunction, column, kClass)
+    ): Double = ReUtil.timeLog({ "${entityClass.simpleName} ${SqlKeyword.QUERY} ${sqlFunction.value.lowercase()}" }) {
+        val aggregateWrapper = AggregateWrapper(sqlFunction, column, entityClass)
         wrapper?.invoke(aggregateWrapper)
         val result = dao.getNumberByDouble(ReUtil.getSql(aggregateWrapper))
         result
@@ -59,8 +60,9 @@ class ReAggregate<T>(private val dao: ReBaseCoreDao<T>, private val kClass: KCla
         sqlFunction: AggregateFunctions,
         column: KProperty<*>,
         wrapper: (GroupByAggregateWrapper.() -> Unit)? = null
-    ): Map<T, Int> = ReUtil.timeLog({ "query ${sqlFunction.value.lowercase()}" }) {
-        val aggregateWrapper = GroupByAggregateWrapper(sqlFunction, column, kClass)
+    ): Map<T, Int> =
+        ReUtil.timeLog({ "${entityClass.simpleName} ${SqlKeyword.QUERY} ${sqlFunction.value.lowercase()}" }) {
+            val aggregateWrapper = GroupByAggregateWrapper(sqlFunction, column, entityClass)
         wrapper?.invoke(aggregateWrapper)
         val result = dao.getGroupByInt(ReUtil.getSql(aggregateWrapper))
         result
@@ -70,8 +72,9 @@ class ReAggregate<T>(private val dao: ReBaseCoreDao<T>, private val kClass: KCla
         sqlFunction: AggregateFunctions,
         column: KProperty<*>,
         wrapper: (GroupByAggregateWrapper.() -> Unit)? = null
-    ): Map<T, Long> = ReUtil.timeLog({ "query ${sqlFunction.value.lowercase()}" }) {
-        val aggregateWrapper = GroupByAggregateWrapper(sqlFunction, column, kClass)
+    ): Map<T, Long> =
+        ReUtil.timeLog({ "${entityClass.simpleName} ${SqlKeyword.QUERY} ${sqlFunction.value.lowercase()}" }) {
+            val aggregateWrapper = GroupByAggregateWrapper(sqlFunction, column, entityClass)
         wrapper?.invoke(aggregateWrapper)
         val result = dao.getGroupByLong(ReUtil.getSql(aggregateWrapper))
         result
@@ -81,8 +84,9 @@ class ReAggregate<T>(private val dao: ReBaseCoreDao<T>, private val kClass: KCla
         sqlFunction: AggregateFunctions,
         column: KProperty<*>,
         wrapper: (GroupByAggregateWrapper.() -> Unit)? = null
-    ): Map<T, Float> = ReUtil.timeLog({ "query ${sqlFunction.value.lowercase()}" }) {
-        val aggregateWrapper = GroupByAggregateWrapper(sqlFunction, column, kClass)
+    ): Map<T, Float> =
+        ReUtil.timeLog({ "${entityClass.simpleName} ${SqlKeyword.QUERY} ${sqlFunction.value.lowercase()}" }) {
+            val aggregateWrapper = GroupByAggregateWrapper(sqlFunction, column, entityClass)
         wrapper?.invoke(aggregateWrapper)
         val result = dao.getGroupByFloat(ReUtil.getSql(aggregateWrapper))
         result
@@ -92,11 +96,12 @@ class ReAggregate<T>(private val dao: ReBaseCoreDao<T>, private val kClass: KCla
         sqlFunction: AggregateFunctions,
         column: KProperty<*>,
         wrapper: (GroupByAggregateWrapper.() -> Unit)? = null
-    ): Map<T, Double> = ReUtil.timeLog({ "query ${sqlFunction.value.lowercase()}" }) {
-        val aggregateWrapper = GroupByAggregateWrapper(sqlFunction, column, kClass)
-        wrapper?.invoke(aggregateWrapper)
-        val result = dao.getGroupByDouble(ReUtil.getSql(aggregateWrapper))
-        result
-    }
+    ): Map<T, Double> =
+        ReUtil.timeLog({ "${entityClass.simpleName} ${SqlKeyword.QUERY} ${sqlFunction.value.lowercase()}" }) {
+            val aggregateWrapper = GroupByAggregateWrapper(sqlFunction, column, entityClass)
+            wrapper?.invoke(aggregateWrapper)
+            val result = dao.getGroupByDouble(ReUtil.getSql(aggregateWrapper))
+            result
+        }
 
 }

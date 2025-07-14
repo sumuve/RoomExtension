@@ -26,11 +26,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "21"
+        jvmTarget = "17"
     }
     publishing {
         singleVariant("release") {
@@ -52,13 +52,14 @@ dependencies {
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
 }
-val Id = "room-extension"
+val id = "room-extension"
+val reVersion = rootProject.extra["localVersion"].toString()
 publishing {
     publications {
         register<MavenPublication>("release") {
             groupId = "io.github.sumuve"
-            artifactId = Id
-            version = rootProject.extra["localVersion"].toString()
+            artifactId = id
+            version = reVersion
             afterEvaluate {
                 from(components["release"])
             }
@@ -97,11 +98,12 @@ publishing {
 signing {
     sign(publishing.publications["release"])
 }
-tasks.register<Zip>("generateRepo") {
+tasks.register<Zip>("publishToLocal") {
+    group = "publishing"
     val publishTask = tasks.named(
         "publishReleasePublicationToMyrepoRepository",
         PublishToMavenRepository::class.java)
     from(publishTask.map { it.repository.url })
-    into("mylibrary")
-    archiveFileName.set("mylibrary.zip")
+    into("")
+    archiveFileName.set("${id}-${reVersion}.zip")
 }

@@ -1,6 +1,5 @@
 package com.cjj.re.wrapper
 
-import androidx.sqlite.db.SimpleSQLiteQuery
 import com.cjj.re.bean.ColumnBean
 import com.cjj.re.condition.HavingConditionController
 import com.cjj.re.condition.WhereConditionController
@@ -107,7 +106,7 @@ class QueryWrapper(kClass: KClass<*>) :
     /**
      * 排序
      */
-    fun orderBy(property: KProperty<*>, isAsc: Boolean) = apply {
+    fun orderBy(property: KProperty<*>, isAsc: Boolean = true) = apply {
         val columnBean = ColumnBean.byProperty(property)
         orderBy(columnBean.tableName, columnBean.columnName, isAsc)
     }
@@ -115,7 +114,7 @@ class QueryWrapper(kClass: KClass<*>) :
     /**
      * 排序
      */
-    fun orderBy(tableName: String, column: String, isAsc: Boolean) = apply {
+    fun orderBy(tableName: String, column: String, isAsc: Boolean = true) = apply {
         orderByList.add(
             OrderBySegment(
                 tableName, column, if (isAsc) SqlKeyword.ASC else SqlKeyword.DESC
@@ -142,50 +141,60 @@ class QueryWrapper(kClass: KClass<*>) :
      *
      * @return sql
      */
-    override fun build(): String {
+    override fun build(isFormat: Boolean): String {
+        val sql = buildString {
+            append(SqlKeyword.SELECT)
+            append(" ")
 
-        val sb = StringBuilder()
-        sb.append("SELECT ")
+            if (queryColumns.isNotEmpty()) {
+                val column = queryColumns.joinToString(",") {
+                    ColumnBean.byProperty(it).run {
+                        "${tableName}.${columnName}"
+                    }
+                }
+                append(column)
+            } else {
+                append(tableName)
+                append(".*")
+            }
+            append(" ")
+            append(SqlKeyword.FROM)
+            append(" ")
+            append(tableName)
+            if (joinList.isNotEmpty()) {
+                append(" ")
+                append(joinList.joinToString(" ") { it.build(isFormat) })
+            }
+            append(super.build(isFormat))
 
-        if (queryColumns.isNotEmpty()) {
-            val column = queryColumns.joinToString(",") {
-                ColumnBean.byProperty(it).run {
-                    "${tableName}.${columnName}"
+            if (groupList.isNotEmpty()) {
+                append(" ")
+                append(GroupBySegment.getSegment(groupList, isFormat))
+                if (havingController.isNotEmpty()) {
+                    append(" ")
+                    append(SqlKeyword.HAVING)
+                    append(" ")
+                    append(havingController.getSegment(isFormat))
                 }
             }
-            sb.append(column)
-        } else {
-            sb.append("$tableName.*")
-        }
-
-        sb.append(" FROM $tableName")
-        if (joinList.isNotEmpty()) {
-            sb.append(" ")
-            sb.append(joinList.joinToString(" ") { it.build() })
-            sb.append(" ")
-        }
-        sb.append(super.build())
-
-        if (groupList.isNotEmpty()) {
-            sb.append(" ")
-            sb.append(GroupBySegment.getSegment(groupList))
-            if (havingController.isNotEmpty()) {
-                sb.append(" HAVING ")
-                sb.append(havingController.getSegment())
+            if (orderByList.isNotEmpty()) {
+                append(" ")
+                append(OrderBySegment.getSegment(orderByList, isFormat))
+            }
+            if (limit != null) {
+                append(" ")
+                append(SqlKeyword.LIMIT)
+                append(" ")
+                append(limit)
+                if (offset != null) {
+                    append(" ")
+                    append(SqlKeyword.OFFSET)
+                    append(" ")
+                    append(offset)
+                }
             }
         }
-        if (orderByList.isNotEmpty()) {
-            sb.append(" ")
-            sb.append(OrderBySegment.getSegment(orderByList))
-        }
-        if (limit != null) {
-            sb.append(" LIMIT $limit")
-            if (offset != null) {
-                sb.append(" OFFSET $offset")
-            }
-        }
-
-        return sb.toString()
+        return sql
     }
 
     /**

@@ -1,9 +1,8 @@
-package com.cjj.re
+package com.cjj.re.wrapper
 
 import com.cjj.re.keys.SqlKeyword
 import com.cjj.re.segment.ConditionSegment
 import com.cjj.re.segment.NormalSegment
-import com.cjj.re.wrapper.Wrapper
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 
@@ -32,14 +31,18 @@ class UpdateWrapper(kClass: KClass<*>) : Wrapper<UpdateWrapper>(kClass) {
         setSegment.add(NormalSegment(",", columnName, SqlKeyword.EQ, value))
     }
 
-    override fun build(): String {
+    override fun build(isFormat: Boolean): String {
         val sb = StringBuilder()
-        sb.append("UPDATE $tableName")
+        sb.append(SqlKeyword.UPDATE)
+        sb.append(" ")
+        sb.append(tableName)
         if (setSegment.isNotEmpty()) {
-            sb.append(" SET ")
-            sb.append(ConditionSegment.getSegment(setSegment))
+            sb.append(" ")
+            sb.append(SqlKeyword.SET)
+            sb.append(" ")
+            sb.append(ConditionSegment.getSegment(setSegment, isFormat))
         }
-        sb.append(super.build())
+        sb.append(super.build(isFormat))
         return sb.toString()
     }
 

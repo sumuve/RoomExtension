@@ -1,10 +1,10 @@
 package com.cjj.re.wrapper
 
-import androidx.sqlite.db.SimpleSQLiteQuery
 import com.cjj.re.bean.ColumnBean
 import com.cjj.re.condition.HavingConditionController
 import com.cjj.re.condition.WhereConditionController
 import com.cjj.re.keys.AggregateFunctions
+import com.cjj.re.keys.SqlKeyword
 import com.cjj.re.segment.GroupBySegment
 import com.cjj.re.segment.OrderBySegment
 import com.cjj.re.util.TableUtils
@@ -48,7 +48,10 @@ class GroupByAggregateWrapper(private val funtions: AggregateFunctions, val colu
 
     fun groupBy(vararg property: KProperty<*>, having: (HavingConditionController.() -> Unit)? = null) = apply {
         val columns =
-            property.map { ColumnBean.byProperty(it).tableName to ColumnBean.byProperty(it).columnName }.toTypedArray()
+            property.map {
+                ColumnBean.byProperty(it)
+                    .let { column -> column.tableName to column.columnName }
+            }.toTypedArray()
         groupBy(*columns, having = having)
     }
 
@@ -62,31 +65,41 @@ class GroupByAggregateWrapper(private val funtions: AggregateFunctions, val colu
             having?.invoke(this.havingController)
         }
 
-    override fun build(): String {
+    override fun build(isFormat: Boolean): String {
 
-        val sb = StringBuilder()
+        val sql = buildString {
 //        if (funtions == AggregateFunctions.COUNT) {
 //            sb.append("SELECT *,${funtions.value}(*) as __group")
 //        } else {
-            sb.append("SELECT *,${funtions.value}($tableName.$columnName) as __group")
-//        }
-
-        sb.append(" FROM $tableName")
-        if (joinList.isNotEmpty()) {
-            sb.append(" ")
-            sb.append(joinList.joinToString(" ") { it.build() })
-            sb.append(" ")
-        }
-        sb.append(super.build())
-        if (groupList.isNotEmpty()) {
-            sb.append(" ")
-            sb.append(GroupBySegment.getSegment(groupList))
-            if (havingController.isNotEmpty()) {
-                sb.append(" HAVING ")
-                sb.append(havingController.getSegment())
+            append(SqlKeyword.SELECT)
+            append(" *, ")
+            append(funtions.value)
+            append("(")
+            append(tableName)
+            append(".")
+            append(columnName)
+            append(") as __group ")
+            append(SqlKeyword.FROM)
+            append(" ")
+            append(tableName)
+            if (joinList.isNotEmpty()) {
+                append(" ")
+                append(joinList.joinToString(" ") { it.build(isFormat) })
+                append(" ")
+            }
+            append(super.build(isFormat))
+            if (groupList.isNotEmpty()) {
+                append(" ")
+                append(GroupBySegment.getSegment(groupList, isFormat))
+                if (havingController.isNotEmpty()) {
+                    append(" ")
+                    append(SqlKeyword.HAVING)
+                    append(" ")
+                    append(havingController.getSegment(isFormat))
+                }
             }
         }
-        return sb.toString()
+        return sql
     }
 
 

@@ -1,6 +1,7 @@
 package com.cjj.re.wrapper
 
 import com.cjj.re.condition.WhereConditionController
+import com.cjj.re.keys.SqlKeyword
 import com.cjj.re.util.TableUtils
 import kotlin.reflect.KClass
 
@@ -15,11 +16,11 @@ class JoinWrapper(joinTableClass: KClass<*>) {
         return this
     }
 
-    fun build(): String {
+    fun build(isFormat: Boolean): String {
         return if (controller.isNotEmpty()) {
-            "join $tableName on ${controller.getSegment()}"
+            "${SqlKeyword.JOIN} $tableName ${SqlKeyword.ON} ${controller.getSegment(isFormat)}"
         } else {
-            "join $tableName"
+            "${SqlKeyword.JOIN} $tableName"
         }
     }
 }
